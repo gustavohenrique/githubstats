@@ -1,0 +1,31 @@
+hr {
+  border: 0;
+  border-top: 1px solid silver;
+}
+
+label.login {
+    width: 70px !important;
+    text-align: left;
+}
+
+.hide {
+    display: none !important;
+}
+
+div.title.item {
+    position: inherit !important;
+}
+
+a.header.title {
+    font-size: 1.4em;
+}
+
+p.language {
+    margin-top: 5px;
+    color: rgba(0, 0, 0, 0.4);
+    text-transform: lowercase;
+}
+
+p.spacer {
+    padding: 11px;
+}

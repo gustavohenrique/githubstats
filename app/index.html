@@ -1,0 +1,193 @@
+<!doctype html>
+<html ng-app="MainApp">
+  <head>
+    <meta charset="utf-8">
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimal-ui">
+    <title>github stats</title>
+
+    <!-- build:css styles/style.css -->
+    <!-- bower:css -->
+    <link rel="stylesheet" href="../bower_components/semantic/dist/semantic.css" />
+    <!-- endbower -->
+    <link rel="stylesheet" href="styles/main.css">
+    <!-- endbuild -->
+    
+  </head>
+  <body>
+    <div ng-controller="MenuCtrl" class="ui fixed inverted main menu">
+        <div class="container">
+            <div class="title item">github stats</div>
+            <div class="right menu hide" show-if="{{ Global.user.username.length > 0 }}">
+                <div class="ui simple dropdown item">
+                    <i class="github alternate icon"></i> {{ Global.user.username }}
+                    <i class="dropdown icon"></i>
+                    <div class="menu">
+                        <a class="item" ng-click="showLogin()">
+                            <i class="user icon"></i> Login
+                        </a>
+                        <a class="item" ng-click="showRepositories()">
+                            <i class="table icon"></i> Repositories
+                        </a>
+                        <a class="item" ng-click="showStars()">
+                            <i class="star icon"></i> Stars
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <p class="spacer"></p>
+
+    <div ng-controller="AuthCtrl" class="ui one column center aligned hide" show-if="{{ Global.activatedBox == Global.constants.LOGIN_BOX }}">
+       <div class="column six wide">
+            <h4 class="ui block top attached header">Github Login</h4>
+            <div class="ui form bottom attached fluid segment">
+                <div class="ui negative message hide" show-if="{{ isError }}">
+                    <div class="header">Authentication failed</div>
+                    <p>Invalid username.</p>
+                </div>
+                <div class="inline field">
+                    <label class="login">Username:</label>
+                    <input type="text" ng-model="user.username">
+                </div>
+                <div class="field">
+                    <button class="ui button large primary" ng-click="enter()">Enter</button>
+                </div>
+            </div>
+       </div>
+    </div>
+
+    <div ng-controller="ReposCtrl">
+
+        <div class="hide" show-if="{{ Global.activatedBox == Global.constants.REPOS_BOX }}">
+
+            <div class="ui segment hide" show-if="{{ isLoading }}">
+                <div class="ui page inverted active dimmer">
+                    <div class="ui text loader">Loading</div>
+                </div>
+            </div>
+
+            <table class="ui striped table">
+                <thead>
+                    <tr>
+                        <th>Repositories</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="item in items track by $index">
+                        <td>
+                            <div class="ui large feed">
+                                <div class="event">
+                                    <div class="content">
+                                        <div class="summary">
+                                            <a href="{{ item.html_url }}" target="_blank" class="header title">{{ item.name }}</a>
+                                            <div class="date">
+                                                Updated at {{ item.updated_at | date : 'yyyy-MM-dd' }}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <p class="language">{{ item.language }}</p>
+                                            <p>{{ item.description }}</p>
+                                        </div>
+                                        <div class="meta">
+                                            <a class="like">
+                                                <i class="star icon"></i>{{ item.stargazers_count }}
+                                            </a>
+                                            <a class="unhide">
+                                                <i class="unhide icon"></i>{{ item.watchers_count }}
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+                <tfoot class="full-width">
+                    <th>
+                        <pagination rows="10"/>
+                    </th>
+                </tfoot>
+            </table>
+            
+        </div>
+    </div>
+
+    <div ng-controller="StarsCtrl">
+
+        <div class="hide" show-if="{{ Global.activatedBox == Global.constants.STARRED_BOX }}">
+
+            <div class="ui segment hide" show-if="{{ isLoading }}">
+                <div class="ui page inverted active dimmer">
+                    <div class="ui text loader">Loading</div>
+                </div>
+            </div>
+
+            <table class="ui striped table">
+                <thead>
+                    <tr>
+                        <th>Stars</th>
+                        <th class="right aligned">
+                            <select ng-model="selectedLanguage" ng-change="filterByLanguage()" ng-options="l for l in languages" class="ui search dropdown">
+                                <option value="all">All</option>
+                            </select>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="item in items track by $index">
+                        <td colspan="2">
+                            <div class="ui large feed">
+                                <div class="event">
+                                    <div class="content">
+                                        <div class="summary">
+                                            <a href="{{ item.html_url }}" target="_blank" class="header title">{{ item.name }}</a>
+                                            <div class="date">
+                                                Updated at {{ item.updated_at | date : 'yyyy-MM-dd' }}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <p class="language">{{ item.language }}</p>
+                                            <p>{{ item.description }}</p>
+                                        </div>
+                                        <div class="meta">
+                                            <a class="like">
+                                                <i class="star icon"></i>{{ item.stargazers_count }}
+                                            </a>
+                                            <a class="unhide">
+                                                <i class="unhide icon"></i>{{ item.watchers_count }}
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+                <tfoot class="full-width">
+                    <th colspan="2">
+                        <pagination rows="10"/>
+                    </th>
+                </tfoot>
+            </table>
+            
+        </div>
+
+    </div>
+
+
+    
+    <!-- build:js script.js -->
+    <!-- bower:js -->
+    <script src="../bower_components/angularjs/angular.js"></script>
+    <!-- endbower -->
+    <script src="scripts/app-service.js"></script>
+    <script src="scripts/app-controller.js"></script>
+    <script src="scripts/app-factory.js"></script>
+    <script src="scripts/app-directives.js"></script>
+    <script src="scripts/app.js"></script>
+    <!-- endbuild -->
+  </body>
+</html>
