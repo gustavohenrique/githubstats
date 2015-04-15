@@ -2,15 +2,20 @@
     'use strict';
 
     var getLastPageNumberFromHeader = function (headers, totalPages) {
-        var links = headers('link').split(',');
+        try {
+            var links = headers('link').split(',');
 
-        for (var i = 0; i < links.length; i++) {
-            var link = links[i];
-            if (link && link.search('last') > 0 && totalPages === 0) {
-                return link.match(/page=[0-9]{1,2}/)[0].split('=')[1];
+            for (var i = 0; i < links.length; i++) {
+                var link = links[i];
+                if (link && link.search('last') > 0 && totalPages === 0) {
+                    return link.match(/page=[0-9]{1,2}/)[0].split('=')[1];
+                }
             }
+            return totalPages;
         }
-        return totalPages;
+        catch (e) {
+            return 1;
+        }
     };
 
     var getNextPageUrlFromHeader = function (headers) {
