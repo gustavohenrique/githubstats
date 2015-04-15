@@ -13,11 +13,26 @@
         return totalPages;
     };
 
+    var getNextPageUrlFromHeader = function (headers) {
+        try {
+            var links = headers('link').split(',');
+
+            for (var i = 0; i < links.length; i++) {
+                var link = links[i];
+                if (link && link.search('next') > 0) {
+                    return link.match(/http.*[0-9]/)[0];
+                }
+            }
+        }
+        catch (e) {}
+        return '';
+    };
+
     var groupByLanguages = function (items) {
         var groups = {};
         for (var i = 0; i < items.length; i++) {
             var item = items[i],
-                language = item.language;
+                language = item.language || 'Other';
 
             if (! groups.hasOwnProperty(language)) {
                 groups[language] = [item];
@@ -30,10 +45,22 @@
     };
 
     var getLanguagesFrom = function (groups) {
+        function compare (a,b) {
+            if (a.name < b.name)
+                return -1;
+            if (a.name > b.name)
+                return 1;
+            return 0;
+        };
+
         var languages = [];
         for (var language in groups) {
-            languages.push(language);
+            languages.push({
+                name: language,
+                total: groups[language].length
+            });
         }
+        languages.sort(compare);
         return languages;
     };
 
@@ -61,12 +88,12 @@
         }
     ]);
 
-    app.controller('AuthCtrl', ['$scope', 'Global',
+    app.controller('AuthCtrl', ['$scope', 'Global', 'mainService',
 
-        function ($scope, Global) {
+        function ($scope, Global, mainService) {
             $scope.Global = Global;
             $scope.user = {
-                username: 'gustavohenrique'
+                username: ''
             };
 
             $scope.enter = function () {
@@ -74,17 +101,22 @@
                     $scope.isError = true;
                 }
                 else {
-                    Global.user = $scope.user;
-                    Global.activatedBox = '';
-                    //$scope.$parent.$broadcast(Global.events.authenticate);
+                    mainService.verifyUsername($scope, function () {
+                        Global.user = $scope.user;
+                        Global.activatedBox = '';
+                        $scope.isError = false;
+                    },
+                    function (res) {
+                        $scope.isError = true;
+                    });
                 }
             };
         }
     ]);
 
-    app.controller('ReposCtrl', ['$scope', 'Global', 'paginationService',
+    app.controller('ReposCtrl', ['$scope', 'Global', 'mainService',
 
-        function ($scope, Global, paginationService) {
+        function ($scope, Global, mainService) {
             $scope.Global = Global;
             $scope.currentPage = 1;
             $scope.rows = 10;
@@ -95,14 +127,15 @@
             var paginate = function (pageNumber) {
                 $scope.currentPage = pageNumber;
                 $scope.isLoading = true;
-                paginationService.findAllRepos($scope, function (res, status, headers) {
+                mainService.findAllRepos($scope, function (res, status, headers) {
                     $scope.items = res;
                     $scope.totalPages = getLastPageNumberFromHeader(headers, $scope.totalPages);
                     $scope.total = res.length;
                     $scope.isLoading = false;
                 },
                 function (res) {
-                    console.log('erro:', res);
+                    $scope.items = [];
+                    $scope.isLoading = false;
                 });
             };
 
@@ -114,46 +147,66 @@
         }
     ]);
 
-    app.controller('StarsCtrl', ['$scope', 'Global', 'paginationService',
+    app.controller('StarsCtrl', ['$scope', 'Global', 'mainService',
 
-        function ($scope, Global, paginationService) {
+        function ($scope, Global, mainService) {
             $scope.Global = Global;
-            $scope.currentPage = 1;
-            $scope.rows = 10;
-            $scope.total = 1;
-            $scope.totalPages = 0;
             $scope.isLoading = false;
+            $scope.items = [];
 
-            var paginate = function (pageNumber) {
-                $scope.currentPage = pageNumber;
-                $scope.isLoading = true;
-                paginationService.findAllStars($scope, function (res, status, headers) {
-                    $scope.items = res;
-                    $scope.groups = groupByLanguages(res);
-                    $scope.languages = getLanguagesFrom($scope.groups);
-                    $scope.selectedLanguage = '';
-                    $scope.totalPages = getLastPageNumberFromHeader(headers, $scope.totalPages);
-                    $scope.total = res.length;
+            var findAll = function (scope, callback) {
+                if (! Global.cache.get('items')) {
+                    mainService.findAllStars(scope, function (res, status, headers) {
+                        scope.nextPageUrl = getNextPageUrlFromHeader(headers) || '';
+                        if (scope.nextPageUrl.length > 0) {
+                            scope.items = scope.items.concat(res);
+                            findAll(scope, callback);
+                        }
+                        else {
+                            callback(res, status, headers);
+                        }
+                    },
+                    function (res) {
+                        $scope.items = [];
+                        $scope.isLoading = false;
+                    });
+                }
+                else {
+                    $scope.items = Global.cache.get('items');
                     $scope.isLoading = false;
-                },
-                function (res) {
-                    console.log('erro:', res);
+                }
+            }
+
+            var load = function () {
+                $scope.isLoading = true;
+
+                findAll($scope, function (res, status, headers) {
+                    if ($scope.items.length > 0) { 
+                        $scope.groups = groupByLanguages($scope.items);
+                        $scope.languages = getLanguagesFrom($scope.groups);
+                        $scope.selectedLanguage = '';
+                        Global.cache.put('items', $scope.items);
+                        $scope.isLoading = false;
+                    }
+                    else {
+                        $scope.isLoading = false;
+                    }
                 });
             };
 
-            $scope.paginate = paginate;
+            $scope.load = load;
 
             $scope.filterByLanguage = function () {
                 if ($scope.selectedLanguage.length > 0) {
                     $scope.items = $scope.groups[$scope.selectedLanguage];
                 }
                 else {
-                    paginate($scope.currentPage);
+                    load();
                 }
             };
 
             $scope.$on(Global.events.stars, function (event, args) {
-                paginate($scope.currentPage);
+                load();
             });
         }
     ]);

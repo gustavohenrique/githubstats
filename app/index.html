@@ -42,15 +42,15 @@
 
     <div ng-controller="AuthCtrl" class="ui one column center aligned hide" show-if="{{ Global.activatedBox == Global.constants.LOGIN_BOX }}">
        <div class="column six wide">
-            <h4 class="ui block top attached header">Github Login</h4>
-            <div class="ui form bottom attached fluid segment">
+            <h4 class="ui block top center aligned attached header">Github Login</h4>
+            <div class="ui form bottom center aligned attached fluid segment">
                 <div class="ui negative message hide" show-if="{{ isError }}">
-                    <div class="header">Authentication failed</div>
-                    <p>Invalid username.</p>
+                    <div class="header">Login failed</div>
+                    <p>Username does not exists.</p>
                 </div>
                 <div class="inline field">
-                    <label class="login">Username:</label>
-                    <input type="text" ng-model="user.username">
+                    <label class="login">github.com/</label>
+                    <input type="text" ng-model="user.username" placeholder="username">
                 </div>
                 <div class="field">
                     <button class="ui button large primary" ng-click="enter()">Enter</button>
@@ -69,7 +69,12 @@
                 </div>
             </div>
 
-            <table class="ui striped table">
+            <div class="ui negative message hide" show-if="{{ items.length == 0 }}">
+                <div class="header">No results found</div>
+                <p>No repositories was found for this user or the username not exists.</p>
+            </div>
+
+            <table class="ui striped table" ng-hide="items.length == 0">
                 <thead>
                     <tr>
                         <th>Repositories</th>
@@ -125,13 +130,19 @@
                 </div>
             </div>
 
-            <table class="ui striped table">
+            <div class="ui negative message hide" show-if="{{ items.length == 0 }}">
+                <div class="header">No results found</div>
+                <p>The user never starred a project.</p>
+            </div>
+
+            <table class="ui striped table" ng-hide="items.length == 0">
                 <thead>
                     <tr>
                         <th>Stars</th>
                         <th class="right aligned">
-                            <select ng-model="selectedLanguage" ng-change="filterByLanguage()" ng-options="l for l in languages" class="ui search dropdown">
-                                <option value="all">All</option>
+                            <select ng-model="selectedLanguage" ng-change="filterByLanguage()" class="ui search dropdown">
+                                <option value="">Filter</option>
+                                <option value="{{ l.name }}" ng-repeat="l in languages">{{ l.name }}</option>
                             </select>
                         </th>
                     </tr>
@@ -168,7 +179,14 @@
                 </tbody>
                 <tfoot class="full-width">
                     <th colspan="2">
-                        <pagination rows="10"/>
+                        <div class="ui tiny statistic" ng-repeat="item in languages track by $index">
+                            <div class="label">
+                                {{ item.name }}
+                            </div>
+                            <div class="value">
+                                {{ item.total }}
+                            </div>
+                        </div>
                     </th>
                 </tfoot>
             </table>

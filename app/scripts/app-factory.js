@@ -3,10 +3,11 @@
 
     var app = angular.module('AppFactory', []);
 
-    app.factory('Global', [
+    app.factory('Global', ['$cacheFactory',
 
-        function () {
+        function ($cacheFactory) {
             return {
+                cache: $cacheFactory('github_stats'),
                 activatedBox: 'login',
                 user: {
                     username: ''
