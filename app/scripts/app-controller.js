@@ -46,12 +46,14 @@
 
     var getLanguagesFrom = function (groups) {
         function compare (a,b) {
-            if (a.name < b.name)
+            if (a.name < b.name) {
                 return -1;
-            if (a.name > b.name)
+            }
+            if (a.name > b.name) {
                 return 1;
+            }
             return 0;
-        };
+        }
 
         var languages = [];
         for (var language in groups) {
@@ -175,7 +177,7 @@
                     $scope.items = Global.cache.get('items');
                     $scope.isLoading = false;
                 }
-            }
+            };
 
             var load = function () {
                 $scope.isLoading = true;
